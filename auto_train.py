@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 import torch
 from torch.onnx.symbolic_opset8 import zeros_like
 import copy
+from CKA import CudaCKA
+
+
 
 from auto_load_data import *
 from auto_model import *
@@ -12,6 +15,7 @@ import numpy as np
 from torchinfo import summary
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+cuda_cka = CudaCKA(device)
 
 model = NNClassifier().to(device)
 training_loader, validation_loader = get_data_loaders()
@@ -30,16 +34,30 @@ def find_best_first_layer(model):
     cka_scores = []
     for i in range(len(model.conv1_layers)):
         output = model.conv1_layers[i](input)
-        output = output.clone()
-        v = torch.where(output > 0, 1, 0)
-        reshaped_input = torch.autograd.grad(output, inputs=(input.requires_grad_(True),), grad_outputs=v, allow_unused=True)[0]
+        print('layer {}'.format(i))
+        print(input.shape, output.shape)
+        v = nn.Parameter(torch.where(model.conv1_layers[i].weight.abs() > 0, 1., 0.))
+        with torch.no_grad():
+            input_reshape_layer = nn.Conv2d(3, 6, 4, device=device)
+            input_reshape_layer.weight = v
+        input_reshaped = input_reshape_layer(input)
+        # print(v[:5, :5])
+        # print(input_reshape_layer.weight)
+        print(output[0, 0, :3, :3])
+        print(input_reshaped[0, 0, :3, :3])
+        print(input_reshaped.shape, output.T.shape)
+        score = cuda_cka.kernel_CKA(output[0, 0], input_reshaped[0, 0])
+        scores.append(score)
+
+        # v = torch.where(output > 0, 1, 0)
+        # reshaped_input = torch.autograd.grad(output, inputs=(input.requires_grad_(True),), grad_outputs=v, allow_unused=True)[0]
         # score = torch.cdist(output, input)
         # output_model = model.clone()
         # output_model.first_layer_used = i
         # cka_scores.append(CKA(model1=input_model, model2=output_model))
         # print(reshaped_input)
 
-        scores.append((input.shape, output.shape, type(reshaped_input)))
+        # scores.append((input.shape, output.shape, type(reshaped_input)))
     print('cka scores: ' + str(scores))
     return scores
 
