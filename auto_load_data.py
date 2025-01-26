@@ -10,7 +10,7 @@ def get_data_loaders(show_imgs=False):
     all_transforms = transforms.Compose([transforms.ToTensor(),
                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                                     transforms.Resize(size=(32, 32)),
-                                    transforms.Grayscale(3),
+                                    transforms.Grayscale(1),
                                     ])
 
     dataset_CIFAR10 = torchvision.datasets.CIFAR10(root='./data',
