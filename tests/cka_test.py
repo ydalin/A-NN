@@ -22,10 +22,10 @@ dataset_CIFAR10 = torchvision.datasets.CIFAR10(root='./data',
 
 dataset = dataset_CIFAR10
 
-train_data, val_data = random_split(dataset_CIFAR10, [.9, .1])
+train_data, val_data = random_split(dataset_CIFAR10, [4, len(dataset_CIFAR10) - 4])
 
 
-training_loader = torch.utils.data.DataLoader(dataset,
+training_loader = torch.utils.data.DataLoader(train_data,
                                               batch_size=4,
                                               shuffle=True)
 
@@ -48,12 +48,12 @@ out_2 = nn2(input)
 
 comparison = cka.CKA(nn2, nn1, "nn2", "nn1", device=device)
 comparison.compare(training_loader, training_loader)
-comparison.plot_results('cka_test.png', 'cka test')
+# comparison.plot_results('cka_test.png', 'cka test')
 results = comparison.export()
 
 comparison2 = cka.CKA(nn1, nn1, "nn1", "nn1", device=device)
 comparison2.compare(training_loader, training_loader)
-comparison2.plot_results('cka_test.png', 'cka test')
+# comparison2.plot_results('cka_test.png', 'cka test')
 results2 = comparison2.export()
 print('results')
 print(results)

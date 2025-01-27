@@ -88,6 +88,8 @@ def find_best_first_layer_eval(model, x, y, metric=CrossEntropyLoss):
     # print(results)
     with torch.no_grad():
         for i in range(len(model.conv1_layers)):
+
+
             model.first_layer_used = i
             result = model(x) #making result[0] for testing, so using only first of batch
             # print('x')
@@ -106,6 +108,16 @@ def find_best_first_layer_eval(model, x, y, metric=CrossEntropyLoss):
     model.conv1_layers[1].eval()
     model.conv1_layers[1].requires_grad_(False)
     return results
+
+def layers_eval(model, x):
+    for layer in model.conv1_layers:
+        layer.eval()
+        model.first_layer_used = layer
+        input_model = model.clone()
+        input_model.weight = torch.ones_like(input_model.weight)
+        input_model.bias = torch.ones_like(input_model.bias)
+        input_model = input_model.to(device)
+
 
 def train_one_epoch(epoch_index, tb_writer):
     running_loss = 0.
